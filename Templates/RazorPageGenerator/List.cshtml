@@ -1,0 +1,630 @@
+﻿@inherits Microsoft.VisualStudio.Web.CodeGeneration.Templating.RazorTemplateBase
+@using Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
+@using System.Collections.Generic
+@using System.Linq
+@@page
+@@model @Model.NamespaceName.@Model.PageModelClassName
+
+@{
+    if (Model.IsPartialView)
+    {
+    }
+    else if (Model.IsLayoutPageSelected)
+    {
+    @:@@{
+    @:ViewData["Title"] = "@Model.RazorPageName";
+        if (!string.IsNullOrEmpty(Model.LayoutPageFile))
+        {
+    @:Layout = "@Model.LayoutPageFile";
+        }
+    @:}
+    @:
+    @:<h1>@Model.RazorPageName</h1>
+    @:
+    }
+    else
+    {
+    @:@@{
+    @:Layout = null;
+    @:}
+    @:
+    @:<!DOCTYPE html>
+    @:
+    @:<html>
+    @:<head>
+    @:<meta name="viewport" content="width=device-width" />
+    @:<title>@Model.RazorPageName</title>
+    @:</head>
+    @:<body>
+        //    PushIndent("    ");
+    }
+    @:<p>
+    @:<a href="#createModal" type="button" class="btn btn-primary" data-bs-toggle="modal" >Create New</a>
+    @:</p>
+    @:<table id="listaitems" class="table">
+    @:<thead>
+    @:<tr>
+        Dictionary<string, IPropertyMetadata> propertyLookup = ((IModelMetadata)Model.ModelMetadata).Properties.ToDictionary(x => x.PropertyName, x => x);
+        Dictionary<string, INavigationMetadata> navigationLookup = ((IModelMetadata)Model.ModelMetadata).Navigations.ToDictionary(x => x.AssociationPropertyName, x => x);
+
+        foreach (var item in Model.ModelMetadata.ModelType.GetProperties())
+        {
+            if (propertyLookup.TryGetValue(item.Name, out IPropertyMetadata property)
+                && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
+            {
+    <th>
+                                                                                        @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(property))
+    </th>
+            }
+            else if (navigationLookup.TryGetValue(item.Name, out INavigationMetadata navigation))
+            {
+    <th>
+                                                                                        @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(navigation))
+    </th>
+            }
+        }
+    @:<th></th>
+    @:</tr>
+    @:</thead>
+    @:<tbody>
+    @:@@foreach (var item in Model.@(Model.ModelTypeName)) {
+    @:<tr>
+        foreach (var item in Model.ModelMetadata.ModelType.GetProperties())
+        {
+            if (propertyLookup.TryGetValue(item.Name, out IPropertyMetadata property)
+                && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
+            {
+    <td>
+                                                                                        @@Html.DisplayFor(modelItem => item.@GetValueExpression(property))
+    </td>
+            }
+            else if (navigationLookup.TryGetValue(item.Name, out INavigationMetadata navigation))
+            {
+    <td>
+                                                                                        @@Html.DisplayFor(modelItem => item.@GetValueExpression(navigation).@navigation.DisplayPropertyName)
+    </td>
+            }
+        }
+        string pkName = GetPrimaryKeyName();
+        if (pkName != null)
+        {
+    @:<td>
+
+    @:<a href="#editModal" id="editbtn" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-itemid="@@item.@pkName">Editar</a> |               
+    @:<a href="#viewModal" id="viewbtn" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-itemid="@@item.@pkName">Detalles</a> |
+    @:<a href="#deleteModal" id="deletebtn" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-itemid="@@item.@pkName">Eliminar</a>
+
+
+    @:</td>
+        }
+        else
+        {
+    <td>
+                                                                                        @@Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                                                                                        @@Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+                                                                                        @@Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+    </td>
+        }
+    @:</tr>
+    @:}
+    @:</tbody>
+
+    @:</table>
+
+    <!-- Start: Delete Modal -->
+
+    @:<div id="deleteModal" class="modal fade">
+    @:<div class="modal-dialog">
+    @:<div class="modal-content">
+        
+    @:<div class="modal-header">						
+    @:<h4 class="modal-title">Eliminar Unidad</h4>
+    @:<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
+    @:</div>
+    @:<div class="modal-body">					
+    @:<p id="deletemsg"></p>
+                    
+                    
+    @:</div>
+    @:<div class="modal-footer">
+    @:<form method="post" asp-page-handler="Delete">
+    @:<input type="hidden" id="@pkName" name="@pkName" value="">
+
+                
+    @:<input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+                      
+                   
+    @:<input type="submit" value="Eliminar" class="btn btn-danger"  />
+                  
+    @:</form>
+    @:</div>
+    @:</div>
+    @:</div>
+    @:</div>
+
+
+    <!-- End: Delete Modal -->
+
+    <!-- Start: Create Modal -->
+    @:<div id="createModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    @:<div class="modal-dialog">
+    @:<div class="modal-content">
+    @:<form method="post" asp-page-handler="Create">
+    @:<div class="modal-header">						
+    @:<h4 class="modal-title">New @Model.ViewDataTypeShortName</h4>
+    @:<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
+    @:</div>
+    @:<div class="modal-body">	
+                
+    @:<div class="row">
+    @:<div class="col">
+               
+
+    @:<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+     
+                        foreach (var property in Model.ModelMetadata.Properties)
+        {
+            if (property.Scaffold && !property.IsAutoGenerated && !property.IsReadOnly)
+            {
+                if (property.IsForeignKey)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<select asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class ="form-control" asp-items="ViewBag.@property.PropertyName"></select>
+    @:</div>
+                    continue;
+                }
+
+                bool isCheckbox = property.TypeName.Equals("System.Boolean");
+                if (isCheckbox)
+                {
+    @:<div class="form-group form-check">
+    @:<label class="form-check-label">
+    @:<input class="form-check-input" asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" /> @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
+    @:</label>
+    @:</div>
+                }
+                else if (property.IsEnum && !property.IsEnumFlags)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<select asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control"></select>
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+                else if (property.IsMultilineText)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<textarea asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control"></textarea>
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+                else
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<input asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control" />
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+            }
+        }
+    
+    @:</div>
+    @:</div>
+
+
+          
+    @:</div>
+    @:<div class="modal-footer">
+
+    @:<div class="form-group">
+    @:<input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+    @:<input type="submit" value="Guardar" class="btn btn-primary"   />
+    @:</div>
+
+    @:</div>
+    @:</form>
+    @:</div>
+    @:</div>
+    @:</div>
+
+    <!-- End: Create Modal -->
+
+
+    <!-- Start: Edit Modal -->
+
+
+
+    @:<div id="editModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    @:<div class="modal-dialog">
+    @:<div class="modal-content">
+    @:<form method="post"  asp-page-handler="Edit">
+    @:<div class="modal-header">						
+    @:<h4 class="modal-title">Edit @Model.ViewDataTypeShortName</h4>
+    @:<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
+    @:</div>
+    @:<div class="modal-body">	
+    @:<div class="row">
+    @:<div class="col">
+    @:<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                       foreach (PropertyMetadata property in Model.ModelMetadata.Properties)
+        {
+            if (property.IsPrimaryKey)
+            {
+    @:<input type="hidden" asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" />
+                continue;
+            }
+
+            if (property.Scaffold)
+            {
+                if (property.IsReadOnly)
+                {
+                    continue;
+                }
+
+                if (property.IsForeignKey)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<select asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control" asp-items="ViewBag.@property.PropertyName"></select>
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                    continue;
+                }
+
+                bool isCheckbox = property.TypeName.Equals("System.Boolean");
+                if (isCheckbox)
+                {
+    @:<div class="form-group form-check">
+    @:<label class="form-check-label">
+    @:<input class="form-check-input" asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" /> @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName).@GetValueExpression(property))
+    @:</label>
+    @:</div>
+                }
+                else if (property.IsEnum && !property.IsEnumFlags)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<select asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control"></select>
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+                else if (property.IsMultilineText)
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<textarea asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control"></textarea>
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+                else
+                {
+    @:<div class="form-group">
+    @:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    @:<input asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control" />
+    @:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    @:</div>
+                }
+            }
+            // Ideally we shouldn't be here  but if the user marks the foreign key as [ScaffoldColumn(false)], we want to atleast try to make it work.
+            else if (property.IsForeignKey)
+            {
+    @:<input type="hidden" asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" />
+                continue;
+            }
+        }
+
+
+    @:</div>
+    @:</div>
+    @:</div>
+    @:<div class="modal-footer">
+
+    <div class="form-group">
+                                                                                            <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+                                                                                            <input type="submit" value="Actualizar" class="btn btn-primary"  />
+    </div>
+
+    @:</div>
+    @:</form>
+    @:</div>
+    @:</div>
+    @:</div>
+
+
+    <!-- End: Edit Modal -->
+    <!-- Start: Detail Modal -->
+
+    @:<div id="viewModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
+    @:<div class="modal-dialog">
+    @:<div class="modal-content">
+        
+    @:<div class="modal-header">						
+    <h4 class="modal-title">Details @Model.ViewDataTypeShortName</h4>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
+    @:</div>
+    @:<div class="modal-body">					
+    
+    <div>
+                        <dl class="row">
+                     @{
+    Dictionary<string, IPropertyMetadata> propertyLookup2 = ((IModelMetadata)Model.ModelMetadata).Properties.ToDictionary(x => x.PropertyName, x => x);
+    Dictionary<string, INavigationMetadata> navigationLookup2 = ((IModelMetadata)Model.ModelMetadata).Navigations.ToDictionary(x => x.AssociationPropertyName, x => x);
+
+    foreach (var item in Model.ModelMetadata.ModelType.GetProperties())
+    {
+        if (propertyLookup2.TryGetValue(item.Name, out IPropertyMetadata property)
+            && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
+        {
+                                                                                                                        <dt class="col-sm-6" >
+                                                                                                                            @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
+                                                                                                                        </dt>
+                                                     
+                                                                                                                            <dd class="col-sm-6" id="@GetValueExpression(property)">
+                                                        
+
+                                                                                                                            </dd>
+
+                                                                                
+                                                   
+        }
+       
+        else if(propertyLookup2.TryGetValue(item.Name, out IPropertyMetadata property2) && property2.IsForeignKey){
+                                                                                                                 <dt class="col-sm-6" >
+                                                                                                                    @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
+                                                                                                                </dt>
+                                                                                                                <dd class="col-sm-6" id="@GetValueExpression(property)">
+                                                    @{
+                                string aspfor =  Model.ModelTypeName + "2." + GetValueExpression(property);
+                                string aspitems =  "ViewBag." + GetValueExpression(property);
+                                                                    <select asp-for="@aspfor" class="form-control" asp-items="@aspitems"></select>
+                                                                                                                        }
+                                                                                                                      
+
+                                                                                                                </dd>
+
+        
+        }
+        
+     }
+    
+                    }
+                         
+                     </dl>
+    </div>
+                    
+    @:</div>
+    @:<div class="modal-footer">
+
+    <div class="form-group">
+                                                                                            <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+    </div>
+
+    @:</div>
+               
+    @:</div>
+    @:</div>
+    @:</div>
+
+
+
+    <!-- End Detail Modal -->
+
+
+    if (Model.ReferenceScriptLibraries)
+    {
+    @:@@section Scripts {
+    @:@@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <text>
+                           
+                        <script>
+                                     $(document).ready(function () {
+                                 $("table#listaitems #deletebtn").click(function () {
+                                     var itemID = $(this).attr("data-bs-itemid");
+                                    // use another attribute at the sender object to send description data to delete modal window
+                                    //var itemDescription = $(this).attr("data-bs-whatever");
+                                     $("#deleteModal").find(".modal-body #deletemsg").text("Are you Sure?: ID = " + itemID);
+                                     $("#deleteModal").find("#@pkName").val(itemID);
+                                 });
+
+                             $("table#listaitems #editbtn").click(function () {
+                                     var itemID = $(this).attr("data-bs-itemid");
+                                     $("#editModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
+                                     GetEditProductDetails(itemID);
+                                 });
+
+                                 $("table#listaitems #viewbtn").click(function () {
+                                     var itemID = $(this).attr("data-bs-itemid");
+                                     $("#viewModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
+                                     GetViewProductDetails(itemID);
+                                 });
+                             });
+
+                            function GetEditProductDetails(itemID) {
+                            $.ajax({
+                                url: "@@Url.Page("./Index","AjaxDetail")",
+                                typr: "GET",
+                                data: { "id": "" + itemID + "" },
+                                contentType: "application/json;charset=UTF-8",
+                                dataType: "json",
+                                success: function (response) {
+                                    //console.log(response);
+                                    @{
+                                           foreach (PropertyMetadata property in Model.ModelMetadata.Properties)
+        {
+            if (property.IsPrimaryKey)
+            {
+                continue;
+            }
+
+            if (property.Scaffold)
+            {
+                if (property.IsReadOnly)
+                {
+                    continue;
+                }
+                else
+                {
+                                                        bool isCheckbox = property.TypeName.Contains("System.DateTime");
+                                
+                                    if (isCheckbox)
+                                    {
+                                                                   //@:String value = @string.Format(response.@Jsonlowercase(property.PropertyName));
+                                                                  
+                                                                   @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val((response.@Jsonlowercase(property.PropertyName)).substring(0, 10));
+                                    }
+                                    else
+                                    { 
+                                                               @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val(response.@Jsonlowercase(property.PropertyName));
+                                                              
+                                    }
+                                                            
+                }
+            }
+
+            
+        }
+
+
+
+                                    }
+                          
+                                },
+                                error: function (response) {
+                                    alert(response.responseText);
+                                    //$('#editModal #Unidad2_UniNombreCorto').val("");
+                                    //$('#editModal #Unidad2_UniDescripcion').val("");
+                                    //$('#editModal #Unidad2_UniFraccion').val("");
+                                    
+                                }
+                            });
+                            return false;
+                            }
+
+
+                        function GetViewProductDetails(itemID) {
+                            $.ajax({
+                                url: "@@Url.Page("./Index","AjaxDetail")",
+                                typr: "GET",
+                                data: { "id": "" + itemID + "" },
+                                contentType: "application/json;charset=UTF-8",
+                                dataType: "json",
+                                success: function (response) {
+                                    //alert(productID);
+                                    //console.log(response);
+
+                                    @{
+                    foreach (PropertyMetadata property in Model.ModelMetadata.Properties)
+                    {
+                        if (property.IsPrimaryKey)
+                        {
+                            continue;
+                        }
+
+                        if (property.Scaffold)
+                        {
+                            if (property.IsReadOnly)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                if (property.IsForeignKey)
+                                { 
+                                                                @:$("#@(Model.ModelTypeName)@("2")_@property.PropertyName option[value='" + response.@Jsonlowercase(property.PropertyName) + "']").prop("selected", true);
+
+                                }
+                                else
+                                {                   
+
+                                                                @:$('#viewModal #@property.PropertyName').text(response.@Jsonlowercase(property.PropertyName));
+                                                              
+                           
+                                    
+                                }
+                            }
+            }
+
+            
+        }
+
+
+
+                                    }
+                             
+                                },
+                                error: function (response) {
+                                    alert(response.responseText);
+                                    //$('#viewModal #Unidad2_UniNombreCorto').text("");
+                                    //$('#viewModal #Unidad2_UniDescripcion').text("");
+                                    //$('#viewModal #Unidad2_UniFraccion').text("");
+                                    
+                                }
+                            });
+                            return false;
+                        }
+                        </script>
+    </text>
+
+
+
+    @:}
+    }
+
+    if(!Model.IsPartialView && !Model.IsLayoutPageSelected)
+    {
+        //ClearIndent();
+    @:</body>
+    @:</html>
+    }
+}
+
+
+
+
+
+
+
+
+@functions
+{
+    string GetPrimaryKeyName()
+    {
+        return (Model.ModelMetadata.PrimaryKeys != null && Model.ModelMetadata.PrimaryKeys.Length == 1)
+        ? Model.ModelMetadata.PrimaryKeys[0].PropertyName
+        : null;
+    }
+
+    string GetValueExpression(IPropertyMetadata property)
+    {
+        return property.PropertyName;
+    }
+
+    string GetValueExpression(INavigationMetadata navigation)
+    {
+        return navigation.AssociationPropertyName;
+    }
+
+    string GetEnumerableTypeExpression(string typeName)
+    {
+        return "IEnumerable<" + typeName + ">";
+    }
+    bool IsPropertyGuid(IPropertyMetadata property)
+    {
+        return string.Equals("System.Guid", property.TypeName, StringComparison.OrdinalIgnoreCase);
+    }
+    string GetAssociationName(IPropertyMetadata property)
+    {
+        //Todo: Implement properly.
+        return property.PropertyName;
+    }
+    string Jsonlowercase(string str){
+        return char.ToLower(str[0]) + str.Substring(1);
+    }
+
+  
+
+}
