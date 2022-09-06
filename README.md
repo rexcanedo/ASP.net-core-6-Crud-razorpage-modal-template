@@ -7,3 +7,5 @@ There are several examples about creting CRUD modal operation with Asp.Net core 
 My name is Rodrigo Canedo, i'm a senior full stack developer, from Santa Cruz-Bolivia
 
 <a href="https://www.buymeacoffee.com/rcanedo6" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/1.png)
