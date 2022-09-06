@@ -9,3 +9,12 @@ My name is Rodrigo Canedo, i'm a senior full stack developer, from Santa Cruz-Bo
 <a href="https://www.buymeacoffee.com/rcanedo6" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/1.png)
+
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/2.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/3.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/4.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/5.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/6.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/7.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/8.png)
+![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/9.png)
