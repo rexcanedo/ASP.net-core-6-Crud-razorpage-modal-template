@@ -20,3 +20,6 @@ My name is Rodrigo Canedo, i'm a senior full stack developer, from Santa Cruz-Bo
 ![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/9.png)
 
 Just follow the images instrucctions, you can delete the create, delete, edit and detail files, these are generated with the default VS template, just the index file is generated with our custom template. happy coding.
+
+<a href="https://www.buymeacoffee.com/rcanedo6" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
