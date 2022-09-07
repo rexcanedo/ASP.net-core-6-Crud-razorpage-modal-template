@@ -18,3 +18,5 @@ My name is Rodrigo Canedo, i'm a senior full stack developer, from Santa Cruz-Bo
 ![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/7.png)
 ![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/8.png)
 ![Modal CRUD](https://github.com/rexcanedo/ASP.net-core-6-Crud-razorpage-modal-template/blob/main/imagenes/9.png)
+
+Just follow the images instrucctions, you can delete the create, delete, edit and detail files, these are generated with the default VS template, just the index file is generated with our custom template. happy coding.
