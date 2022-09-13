@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq.Expressions;
 @{
     var entitySetName = Model.ModelMetadata.EntitySetName;
     var primaryKeyName = Model.ModelMetadata.PrimaryKeys[0].PropertyName;
@@ -35,7 +36,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
     foreach (var namespaceName in Model.RequiredNamespaces)
     {
        
-        @:using @namespaceName;
+    @:using @namespaceName;
     }
 }
 
@@ -49,26 +50,58 @@ namespace @Model.NamespaceName
         {
             _context = context;
         }
-
+        
+        [BindProperty]
         public IList<@Model.ViewDataTypeShortName> @Model.ViewDataTypeShortName { get;set; } = default!;
 
         [BindProperty]
         public @Model.ViewDataTypeShortName @Model.ViewDataTypeShortName@("2") { get; set; } = default!;
+        [BindProperty(SupportsGet = true)]
+        public int P { get; set; } = 1;
 
-    public async Task OnGetAsync()
+        // Page size, number of records to be displayed
+        [BindProperty(SupportsGet = true)]
+        public int S { get; set; } = 10;
+
+        // Total number of records
+        public int TotalRecords { get; set; } = 0;
+
+    public async Task OnGetAsync(string q)
     {
     if (_context.@(entitySetName) != null)
     {
         @{
     foreach (var property in relatedProperties.Values)
     {
-        @:// to show description column change the last string parameter on this SelectList
-        @:ViewData["@(property.ForeignKeyPropertyNames[0])"] = new SelectList(_context.@property.EntitySetName, "@property.PrimaryKeyNames[0]", "@property.DisplayPropertyName");
+                @:// to show description column change the last string parameter on this SelectList
+                @:ViewData["@(property.ForeignKeyPropertyNames[0])"] = new SelectList(_context.@property.EntitySetName, "@property.PrimaryKeyNames[0]", "@property.DisplayPropertyName");
     }
+     
+                    @:// If the search text is not empty, then apply where clause>
+                    @:// Here is just searching por primary key column because template, that is not useful replace it for some description column or more colums  
 }
+                    
+                var searchExp = new List<Expression<Func<@Model.ViewDataTypeShortName, bool>>>() { };
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    ViewData["Q"] = q;
+                    searchExp.Add(x => x.@(primaryKeyName).Contains(q) 
+                        //if error here change or Add more columns to search here like this example
+                        //|| x.Descriptioncolum.Contains(Q)
+                    );
+                }
+               //count records that returns after the search
+                TotalRecords = await _context.Set<@Model.ViewDataTypeShortName>()
+                                            .WhereList(searchExp)
+                                            .CountAsync();
 
-
-    @Model.ViewDataTypeShortName = await _context.@(entitySetName)@(inlineIncludes).ToListAsync();
+    @Model.ViewDataTypeShortName = await _context.@(entitySetName)
+    .WhereList(searchExp)  
+    @(inlineIncludes)
+     .AsNoTracking()
+     .Skip((P - 1) * S)
+     .Take(S)
+    .ToListAsync();
     }
     }
     public async Task<IActionResult> OnGetAjaxDetailAsync(@primaryKeyNullableTypeName id)
@@ -86,7 +119,7 @@ namespace @Model.NamespaceName
 
             return new JsonResult(@Model.ViewDataTypeShortName@("2"));
         }
-     public async Task<IActionResult> OnPostDeleteAsync(@primaryKeyNullableTypeName @primaryKeyName)
+     public async Task<IActionResult> OnPostDeleteAsync(@primaryKeyNullableTypeName @primaryKeyName,string returnurl)
         {
             if (@primaryKeyName == null || _context.@(entitySetName) == null)
             {
@@ -101,18 +134,18 @@ namespace @Model.NamespaceName
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToPage("./Index");
+            return Redirect(returnurl);
         }
          public async Task<IActionResult> OnPostCreateAsync()
         {
 @{
         if (@Model.NullableEnabled)
         {
-          @:if (!ModelState.IsValid || _context.@(entitySetName) == null || @Model.ViewDataTypeShortName@("2") == null)
+                  @:if (!ModelState.IsValid || _context.@(entitySetName) == null || @Model.ViewDataTypeShortName@("2") == null)
         }
         else 
         {
-          @:if (!ModelState.IsValid)
+                  @:if (!ModelState.IsValid)
         }
 }
             {
@@ -124,11 +157,11 @@ namespace @Model.NamespaceName
 
             return RedirectToPage("./Index");
         }
-          public async Task<IActionResult> OnPostEditAsync()
+          public async Task<IActionResult> OnPostEditAsync(string returnurl)
         {
             if (!ModelState.IsValid)
             {
-                return Page();
+                return Redirect(returnurl);
             }
 
             _context.Attach(@(Model.ModelTypeName)@("2")).State = EntityState.Modified;
@@ -149,7 +182,7 @@ namespace @Model.NamespaceName
                 }
             }
 
-            return RedirectToPage("./Index");
+            return Redirect(returnurl);
         }
 
         private bool @(Model.ModelTypeName)Exists(@primaryKeyShortTypeName id)
@@ -157,15 +190,35 @@ namespace @Model.NamespaceName
 @{
         if (@Model.NullableEnabled)
         {
-          @:return (_context.@(entitySetName)?.Any(e => e.@primaryKeyName == id)).GetValueOrDefault();
+                  @:return (_context.@(entitySetName)?.Any(e => e.@primaryKeyName == id)).GetValueOrDefault();
         }
         else 
         {
-          @:return _context.@(entitySetName).Any(e => e.@primaryKeyName == id);
+                  @:return _context.@(entitySetName).Any(e => e.@primaryKeyName == id);
         }
 }
         }
  }
+
+ //this class will be generated for each entity namespace, delete to remove repetitive code and implement it on a utils.cs file for entire project
+     public static class GenericWhereList
+    {
+        public static IQueryable<T> WhereList<T>(this IQueryable<T> source, List<Expression<Func<T, bool>>> predications)
+            where T : class
+        {
+            if (predications != null)
+            {
+                foreach (var p in predications)
+                {
+                    source = source.Where(p);
+                }
+            }
+
+            return source;
+        }
+    }
+
+
 }
     @functions
     {

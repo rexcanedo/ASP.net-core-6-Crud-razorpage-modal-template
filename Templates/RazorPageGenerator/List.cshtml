@@ -3,6 +3,8 @@
 @using System.Collections.Generic
 @using System.Linq
 @@page
+@@using LazZiya.TagHelpers.Utilities
+@@using Microsoft.AspNetCore.Http.Extensions
 @@model @Model.NamespaceName.@Model.PageModelClassName
 
 @{
@@ -38,12 +40,33 @@
     @:<body>
         //    PushIndent("    ");
     }
-    @:<p>
-    @:<a href="#createModal" type="button" class="btn btn-primary" data-bs-toggle="modal" >Create New</a>
-    @:</p>
+    <div class="container">
+        <div class="row">
+        <div class="col">
+            <p>
+                <a href="#createModal" type="button" class="btn btn-primary" data-bs-toggle="modal">Create New</a>
+            </p>
+        </div>
+        <div class="col">
+            <form method="get">
+                <div class="input-group">
+                    <button type="submit" class="btn btn-outline-primary">Search</button>
+                    <input id="Q" name="Q" class="form-control" value=@@ViewBag.Q />
+                    <button type="submit" class="btn btn-outline-primary" onClick="getElementById('Q').value = ''">See all</button>
+                    @*
+                add hidden field for page size parameter,
+                so if we can keep search filters if page size is changed
+                *@
+                    <input type="hidden" asp-for="S" />
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
     @:<table id="listaitems" class="table">
     @:<thead>
     @:<tr>
+    <th>Nro</th>
         Dictionary<string, IPropertyMetadata> propertyLookup = ((IModelMetadata)Model.ModelMetadata).Properties.ToDictionary(x => x.PropertyName, x => x);
         Dictionary<string, INavigationMetadata> navigationLookup = ((IModelMetadata)Model.ModelMetadata).Navigations.ToDictionary(x => x.AssociationPropertyName, x => x);
 
@@ -53,13 +76,13 @@
                 && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
             {
     <th>
-                                                                                        @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(property))
+                                                                                            @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(property))
     </th>
             }
             else if (navigationLookup.TryGetValue(item.Name, out INavigationMetadata navigation))
             {
     <th>
-                                                                                        @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(navigation))
+                                                                                            @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)[0].@GetValueExpression(navigation))
     </th>
             }
         }
@@ -67,21 +90,27 @@
     @:</tr>
     @:</thead>
     @:<tbody>
+    @:@@{int i = 1;}
     @:@@foreach (var item in Model.@(Model.ModelTypeName)) {
     @:<tr>
+
+    <td>
+                       <span>@@((Model.P * Model.S) - (Model.S - i))</span>
+    @@{i++;}
+    </td>
         foreach (var item in Model.ModelMetadata.ModelType.GetProperties())
         {
             if (propertyLookup.TryGetValue(item.Name, out IPropertyMetadata property)
                 && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
             {
     <td>
-                                                                                        @@Html.DisplayFor(modelItem => item.@GetValueExpression(property))
+                                                                                            @@Html.DisplayFor(modelItem => item.@GetValueExpression(property))
     </td>
             }
             else if (navigationLookup.TryGetValue(item.Name, out INavigationMetadata navigation))
             {
     <td>
-                                                                                        @@Html.DisplayFor(modelItem => item.@GetValueExpression(navigation).@navigation.DisplayPropertyName)
+                                                                                            @@Html.DisplayFor(modelItem => item.@GetValueExpression(navigation).@navigation.DisplayPropertyName)
     </td>
             }
         }
@@ -100,9 +129,9 @@
         else
         {
     <td>
-                                                                                        @@Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                                                                                        @@Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                                                                                        @@Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                                                                                            @@Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                                                                                            @@Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+                                                                                            @@Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
     </td>
         }
     @:</tr>
@@ -110,7 +139,16 @@
     @:</tbody>
 
     @:</table>
-
+    <text>
+        <paging render-mode="Bootstrap5"
+            page-no="Model.P"
+            page-size="Model.S"
+            total-records="Model.TotalRecords"
+            text-total-pages="Paginas"
+            text-total-records="Registros">
+      
+        </paging>
+    </text>
     <!-- Start: Delete Modal -->
 
     @:<div id="deleteModal" class="modal fade">
@@ -127,7 +165,7 @@
                     
     @:</div>
     @:<div class="modal-footer">
-    @:<form method="post" asp-page-handler="Delete">
+    @:<form method="post" asp-page-handler="Delete" asp-route-returnurl="@@Request.GetEncodedPathAndQuery()">
     @:<input type="hidden" id="@pkName" name="@pkName" value="">
 
                 
@@ -149,7 +187,7 @@
     @:<div id="createModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
     @:<div class="modal-dialog">
     @:<div class="modal-content">
-    @:<form method="post" asp-page-handler="Create">
+    @:<form method="post" asp-page-handler="Create" asp-route-returnurl="@@Request.GetEncodedPathAndQuery()">
     @:<div class="modal-header">						
     @:<h4 class="modal-title">New @Model.ViewDataTypeShortName</h4>
     @:<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
@@ -176,7 +214,8 @@
                 }
 
                 bool isCheckbox = property.TypeName.Equals("System.Boolean");
-                if (isCheckbox)
+                //bool isDatetime = property.TypeName.Contains("System.DateTime");
+            if (isCheckbox)
                 {
     @:<div class="form-group form-check">
     @:<label class="form-check-label">
@@ -184,6 +223,13 @@
     @:</label>
     @:</div>
                 }
+    //            else if (isDatetime){
+    //                    @:<div class="form-group">
+    //@:<label asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="control-label"></label>
+    //@:<select asp-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="form-control" value="@@DateTime.Today.ToString("yyyy-MM-dd")"></select>
+    //@:<span asp-validation-for="@(Model.ModelTypeName)@("2").@property.PropertyName" class="text-danger"></span>
+    //@:</div>
+    //            }
                 else if (property.IsEnum && !property.IsEnumFlags)
                 {
     @:<div class="form-group">
@@ -240,7 +286,7 @@
     @:<div id="editModal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false">
     @:<div class="modal-dialog">
     @:<div class="modal-content">
-    @:<form method="post"  asp-page-handler="Edit">
+    @:<form method="post"  asp-page-handler="Edit" asp-route-returnurl="@@Request.GetEncodedPathAndQuery()">
     @:<div class="modal-header">						
     @:<h4 class="modal-title">Edit @Model.ViewDataTypeShortName</h4>
     @:<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true">&times;</button>
@@ -323,8 +369,8 @@
     @:<div class="modal-footer">
 
     <div class="form-group">
-                                                                                            <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
-                                                                                            <input type="submit" value="Actualizar" class="btn btn-primary"  />
+                                                                                                <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+                                                                                                <input type="submit" value="Actualizar" class="btn btn-primary"  />
     </div>
 
     @:</div>
@@ -348,8 +394,8 @@
     @:<div class="modal-body">					
     
     <div>
-                        <dl class="row">
-                     @{
+                            <dl class="row">
+                         @{
     Dictionary<string, IPropertyMetadata> propertyLookup2 = ((IModelMetadata)Model.ModelMetadata).Properties.ToDictionary(x => x.PropertyName, x => x);
     Dictionary<string, INavigationMetadata> navigationLookup2 = ((IModelMetadata)Model.ModelMetadata).Navigations.ToDictionary(x => x.AssociationPropertyName, x => x);
 
@@ -358,48 +404,48 @@
         if (propertyLookup2.TryGetValue(item.Name, out IPropertyMetadata property)
             && property.Scaffold && !property.IsForeignKey && !property.IsPrimaryKey)
         {
-                                                                                                                        <dt class="col-sm-6" >
-                                                                                                                            @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
-                                                                                                                        </dt>
+                                                                                                                                <dt class="col-sm-6" >
+                                                                                                                                    @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
+                                                                                                                                </dt>
                                                      
-                                                                                                                            <dd class="col-sm-6" id="@GetValueExpression(property)">
-                                                        
+                                                                                                                                    <dd class="col-sm-6" id="@GetValueExpression(property)">
+                                                                
 
-                                                                                                                            </dd>
+                                                                                                                                    </dd>
 
                                                                                 
                                                    
         }
        
         else if(propertyLookup2.TryGetValue(item.Name, out IPropertyMetadata property2) && property2.IsForeignKey){
-                                                                                                                 <dt class="col-sm-6" >
-                                                                                                                    @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
-                                                                                                                </dt>
-                                                                                                                <dd class="col-sm-6" id="@GetValueExpression(property)">
-                                                    @{
+                                                                                                                         <dt class="col-sm-6" >
+                                                                                                                            @@Html.DisplayNameFor(model => model.@(Model.ModelTypeName)@("2").@GetValueExpression(property))
+                                                                                                                        </dt>
+                                                                                                                        <dd class="col-sm-6" id="@GetValueExpression(property)">
+                                                            @{
                                 string aspfor =  Model.ModelTypeName + "2." + GetValueExpression(property);
                                 string aspitems =  "ViewBag." + GetValueExpression(property);
-                                                                    <select asp-for="@aspfor" class="form-control" asp-items="@aspitems"></select>
-                                                                                                                        }
-                                                                                                                      
+                                                                                <select asp-for="@aspfor" class="form-control" asp-items="@aspitems"></select>
+                                                                                                                                }
+                                                                                                                              
 
-                                                                                                                </dd>
+                                                                                                                        </dd>
 
         
         }
         
      }
     
-                    }
-                         
-                     </dl>
+                        }
+                             
+                         </dl>
     </div>
                     
     @:</div>
     @:<div class="modal-footer">
 
     <div class="form-group">
-                                                                                            <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
+                                                                                                <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancelar">
     </div>
 
     @:</div>
@@ -419,40 +465,40 @@
     @:@@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
     <text>
-                           
-                        <script>
-                                     $(document).ready(function () {
-                                 $("table#listaitems #deletebtn").click(function () {
-                                     var itemID = $(this).attr("data-bs-itemid");
-                                    // use another attribute at the sender object to send description data to delete modal window
-                                    //var itemDescription = $(this).attr("data-bs-whatever");
-                                     $("#deleteModal").find(".modal-body #deletemsg").text("Are you Sure?: ID = " + itemID);
-                                     $("#deleteModal").find("#@pkName").val(itemID);
+                               
+                            <script>
+                                         $(document).ready(function () {
+                                     $("table#listaitems #deletebtn").click(function () {
+                                         var itemID = $(this).attr("data-bs-itemid");
+                                        // use another attribute at the sender object to send description data to delete modal window
+                                        //var itemDescription = $(this).attr("data-bs-whatever");
+                                         $("#deleteModal").find(".modal-body #deletemsg").text("Are you Sure?: ID = " + itemID);
+                                         $("#deleteModal").find("#@pkName").val(itemID);
+                                     });
+
+                                 $("table#listaitems #editbtn").click(function () {
+                                         var itemID = $(this).attr("data-bs-itemid");
+                                         $("#editModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
+                                         GetEditProductDetails(itemID);
+                                     });
+
+                                     $("table#listaitems #viewbtn").click(function () {
+                                         var itemID = $(this).attr("data-bs-itemid");
+                                         $("#viewModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
+                                         GetViewProductDetails(itemID);
+                                     });
                                  });
 
-                             $("table#listaitems #editbtn").click(function () {
-                                     var itemID = $(this).attr("data-bs-itemid");
-                                     $("#editModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
-                                     GetEditProductDetails(itemID);
-                                 });
-
-                                 $("table#listaitems #viewbtn").click(function () {
-                                     var itemID = $(this).attr("data-bs-itemid");
-                                     $("#viewModal").find("#@(Model.ModelTypeName)@("2")_@pkName").val(itemID);
-                                     GetViewProductDetails(itemID);
-                                 });
-                             });
-
-                            function GetEditProductDetails(itemID) {
-                            $.ajax({
-                                url: "@@Url.Page("./Index","AjaxDetail")",
-                                typr: "GET",
-                                data: { "id": "" + itemID + "" },
-                                contentType: "application/json;charset=UTF-8",
-                                dataType: "json",
-                                success: function (response) {
-                                    //console.log(response);
-                                    @{
+                                function GetEditProductDetails(itemID) {
+                                $.ajax({
+                                    url: "@@Url.Page("./Index","AjaxDetail")",
+                                    typr: "GET",
+                                    data: { "id": "" + itemID + "" },
+                                    contentType: "application/json;charset=UTF-8",
+                                    dataType: "json",
+                                    success: function (response) {
+                                        //console.log(response);
+                                        @{
                                            foreach (PropertyMetadata property in Model.ModelMetadata.Properties)
         {
             if (property.IsPrimaryKey)
@@ -474,11 +520,11 @@
                                     {
                                                                    //@:String value = @string.Format(response.@Jsonlowercase(property.PropertyName));
                                                                   
-                                                                   @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val((response.@Jsonlowercase(property.PropertyName)).substring(0, 10));
+                                                                           @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val((response.@Jsonlowercase(property.PropertyName)).substring(0, 10));
                                     }
                                     else
                                     { 
-                                                               @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val(response.@Jsonlowercase(property.PropertyName));
+                                                                       @:$('#editModal #@(Model.ModelTypeName)@("2")_@property.PropertyName').val(response.@Jsonlowercase(property.PropertyName));
                                                               
                                     }
                                                             
@@ -490,33 +536,33 @@
 
 
 
+                                        }
+                              
+                                    },
+                                    error: function (response) {
+                                        alert(response.responseText);
+                                        //$('#editModal #Unidad2_UniNombreCorto').val("");
+                                        //$('#editModal #Unidad2_UniDescripcion').val("");
+                                        //$('#editModal #Unidad2_UniFraccion').val("");
+                                        
                                     }
-                          
-                                },
-                                error: function (response) {
-                                    alert(response.responseText);
-                                    //$('#editModal #Unidad2_UniNombreCorto').val("");
-                                    //$('#editModal #Unidad2_UniDescripcion').val("");
-                                    //$('#editModal #Unidad2_UniFraccion').val("");
-                                    
+                                });
+                                return false;
                                 }
-                            });
-                            return false;
-                            }
 
 
-                        function GetViewProductDetails(itemID) {
-                            $.ajax({
-                                url: "@@Url.Page("./Index","AjaxDetail")",
-                                typr: "GET",
-                                data: { "id": "" + itemID + "" },
-                                contentType: "application/json;charset=UTF-8",
-                                dataType: "json",
-                                success: function (response) {
-                                    //alert(productID);
-                                    //console.log(response);
+                            function GetViewProductDetails(itemID) {
+                                $.ajax({
+                                    url: "@@Url.Page("./Index","AjaxDetail")",
+                                    typr: "GET",
+                                    data: { "id": "" + itemID + "" },
+                                    contentType: "application/json;charset=UTF-8",
+                                    dataType: "json",
+                                    success: function (response) {
+                                        //alert(productID);
+                                        //console.log(response);
 
-                                    @{
+                                        @{
                     foreach (PropertyMetadata property in Model.ModelMetadata.Properties)
                     {
                         if (property.IsPrimaryKey)
@@ -534,13 +580,13 @@
                             {
                                 if (property.IsForeignKey)
                                 { 
-                                                                @:$("#@(Model.ModelTypeName)@("2")_@property.PropertyName option[value='" + response.@Jsonlowercase(property.PropertyName) + "']").prop("selected", true);
+                                                                        @:$("#@(Model.ModelTypeName)@("2")_@property.PropertyName option[value='" + response.@Jsonlowercase(property.PropertyName) + "']").prop("selected", true);
 
                                 }
                                 else
                                 {                   
 
-                                                                @:$('#viewModal #@property.PropertyName').text(response.@Jsonlowercase(property.PropertyName));
+                                                                        @:$('#viewModal #@property.PropertyName').text(response.@Jsonlowercase(property.PropertyName));
                                                               
                            
                                     
@@ -553,20 +599,20 @@
 
 
 
+                                        }
+                                 
+                                    },
+                                    error: function (response) {
+                                        alert(response.responseText);
+                                        //$('#viewModal #Unidad2_UniNombreCorto').text("");
+                                        //$('#viewModal #Unidad2_UniDescripcion').text("");
+                                        //$('#viewModal #Unidad2_UniFraccion').text("");
+                                        
                                     }
-                             
-                                },
-                                error: function (response) {
-                                    alert(response.responseText);
-                                    //$('#viewModal #Unidad2_UniNombreCorto').text("");
-                                    //$('#viewModal #Unidad2_UniDescripcion').text("");
-                                    //$('#viewModal #Unidad2_UniFraccion').text("");
-                                    
-                                }
-                            });
-                            return false;
-                        }
-                        </script>
+                                });
+                                return false;
+                            }
+                            </script>
     </text>
 
 
