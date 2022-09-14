@@ -40,6 +40,7 @@
     @:<body>
         //    PushIndent("    ");
     }
+    <alert render-mode="Bootstrap5"></alert>
     <div class="container">
         <div class="row">
         <div class="col">
@@ -51,7 +52,7 @@
             <form method="get">
                 <div class="input-group">
                     <button type="submit" class="btn btn-outline-primary">Search</button>
-                    <input id="Q" name="Q" class="form-control" value=@@ViewBag.Q />
+                    <input id="Q" name="Q" class="form-control" value="@@ViewBag.Q" />
                     <button type="submit" class="btn btn-outline-primary" onClick="getElementById('Q').value = ''">See all</button>
                     @*
                 add hidden field for page size parameter,

@@ -73,12 +73,12 @@ namespace @Model.NamespaceName
         @{
     foreach (var property in relatedProperties.Values)
     {
-                @:// to show description column change the last string parameter on this SelectList
-                @:ViewData["@(property.ForeignKeyPropertyNames[0])"] = new SelectList(_context.@property.EntitySetName, "@property.PrimaryKeyNames[0]", "@property.DisplayPropertyName");
+                        @:// to show description column change the last string parameter on this SelectList
+                        @:ViewData["@(property.ForeignKeyPropertyNames[0])"] = new SelectList(_context.@property.EntitySetName, "@property.PrimaryKeyNames[0]", "@property.DisplayPropertyName");
     }
      
-                    @:// If the search text is not empty, then apply where clause>
-                    @:// Here is just searching por primary key column because template, that is not useful replace it for some description column or more colums  
+                            @:// If the search text is not empty, then apply where clause>
+                            @:// Here is just searching por primary key column because template, that is not useful replace it for some description column or more colums  
 }
                     
                 var searchExp = new List<Expression<Func<@Model.ViewDataTypeShortName, bool>>>() { };
@@ -129,9 +129,15 @@ namespace @Model.NamespaceName
 
             if (@viewDataTypeShortNameLowerCase != null)
             {
+                try{
+                    _context.@(entitySetName).Remove(@viewDataTypeShortNameLowerCase);
+                    await _context.SaveChangesAsync();
+                }
+                catch{
+                    TempData.Danger("It is not posible to delete related data", "MESSAGE !!");
+                }
            
-                _context.@(entitySetName).Remove(@viewDataTypeShortNameLowerCase);
-                await _context.SaveChangesAsync();
+                
             }
 
             return Redirect(returnurl);
@@ -141,11 +147,11 @@ namespace @Model.NamespaceName
 @{
         if (@Model.NullableEnabled)
         {
-                  @:if (!ModelState.IsValid || _context.@(entitySetName) == null || @Model.ViewDataTypeShortName@("2") == null)
+                          @:if (!ModelState.IsValid || _context.@(entitySetName) == null || @Model.ViewDataTypeShortName@("2") == null)
         }
         else 
         {
-                  @:if (!ModelState.IsValid)
+                          @:if (!ModelState.IsValid)
         }
 }
             {
@@ -190,11 +196,11 @@ namespace @Model.NamespaceName
 @{
         if (@Model.NullableEnabled)
         {
-                  @:return (_context.@(entitySetName)?.Any(e => e.@primaryKeyName == id)).GetValueOrDefault();
+                          @:return (_context.@(entitySetName)?.Any(e => e.@primaryKeyName == id)).GetValueOrDefault();
         }
         else 
         {
-                  @:return _context.@(entitySetName).Any(e => e.@primaryKeyName == id);
+                          @:return _context.@(entitySetName).Any(e => e.@primaryKeyName == id);
         }
 }
         }
