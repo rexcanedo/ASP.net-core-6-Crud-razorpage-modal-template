@@ -146,7 +146,7 @@ namespace @Model.NamespaceName
          public async Task<IActionResult> OnPostCreateAsync()
         {
 @{
-        if (@Model.NullableEnabled)
+        if ("enable".Equals(@Model.NullableEnabled, StringComparison.OrdinalIgnoreCase))
         {
                           @:if (!ModelState.IsValid || _context.@(entitySetName) == null || @Model.ViewDataTypeShortName@("2") == null)
         }
@@ -195,7 +195,7 @@ namespace @Model.NamespaceName
         private bool @(Model.ModelTypeName)Exists(@primaryKeyShortTypeName id)
         {
 @{
-        if (@Model.NullableEnabled)
+        if ("enable".Equals(@Model.NullableEnabled, StringComparison.OrdinalIgnoreCase))
         {
                           @:return (_context.@(entitySetName)?.Any(e => e.@primaryKeyName == id)).GetValueOrDefault();
         }
